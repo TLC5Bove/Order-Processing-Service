@@ -12,6 +12,8 @@ public class OrderService {
 
    @Value("${order.API_URL}")
    private String exchangeURL;
+
+
    public String placeOrder (Order order){
       WebClient webClient = WebClient.create(exchangeURL);
       try{
