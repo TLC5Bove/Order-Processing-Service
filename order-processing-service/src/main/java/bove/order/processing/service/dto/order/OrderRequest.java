@@ -1,8 +1,12 @@
-package bove.order.processing.service.order;
+package bove.order.processing.service.dto.order;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Date;
 
 public class OrderRequest {
+
+    @JsonProperty
     private String product;
     private Integer quantity;
     private Double price;
