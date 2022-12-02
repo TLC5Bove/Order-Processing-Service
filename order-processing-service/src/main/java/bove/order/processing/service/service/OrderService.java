@@ -24,8 +24,10 @@ public class OrderService {
     @Value("${order.EXCHANGE2_URL}")
     private String exchange2URL;
 
+    // place buy or sell order to exchange
     public String placeOrder(OrderRequest orderRequest) {
-        WebClient webClient = WebClient.create(exchangeURL);
+        System.out.println(orderRequest);
+        WebClient webClient = WebClient.create(exchange2URL);
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -41,6 +43,7 @@ public class OrderService {
         }
     }
 
+    // persist the order in the t_order table with the uniqueId(response from placing order)
     public void saveOrder(OrderRequest orderRequest, String orderId) {
         orderRepo.save(new Order(orderId,
                 orderRequest.getProduct(),
@@ -51,6 +54,7 @@ public class OrderService {
         System.out.println();
     }
 
+    // check the status of the order with order id
     public OrderStatusResponse getOrderStatus(String orderId) {
         WebClient webClient = WebClient.create(exchangeURL);
 
@@ -66,6 +70,7 @@ public class OrderService {
         return response;
     }
 
+    // update the status field in the t_order table after checking current order status
     public String checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
 
         Order order = orderRepo.findById(orderId).get();

@@ -19,7 +19,6 @@ public class OrderController {
 
     @PostMapping
     public String placeOrderOnExchange(@RequestBody OrderRequest order) {
-        System.out.println(order);
         return orderService.placeOrder(order);
     }
 
