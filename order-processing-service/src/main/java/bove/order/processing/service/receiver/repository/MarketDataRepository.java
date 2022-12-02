@@ -9,8 +9,6 @@ import java.util.Map;
 @Repository
 public class MarketDataRepository implements MarketDataDao {
 
-//    private MarketDataRepository(){}
-
     private final String hashReference = "MarketData";
 
     @Autowired
@@ -24,7 +22,6 @@ public class MarketDataRepository implements MarketDataDao {
     @Override
     public void saveAll(Map<String, MarketData> marketDataList) {
         hashOperations.opsForHash().putAll(hashReference, marketDataList);
-        System.out.println("All saved!!");
     }
 
     @Override

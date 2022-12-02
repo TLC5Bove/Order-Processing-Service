@@ -10,12 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrderService {
     @Autowired
     OrderRepo orderRepo;
+    @Autowired
+    OrderValidatorService orderValidatorService;
     @Value("${order.API_KEY}")
     private String exchangeAPIkey;
 
@@ -24,7 +29,44 @@ public class OrderService {
     @Value("${order.EXCHANGE2_URL}")
     private String exchange2URL;
 
+    // validate the request
+    public List<String> validator(OrderRequest orderRequest){
+        String stringResults = "";
+
+        List<String> limit = List.of(orderValidatorService.quantityIsWithinLimit(orderRequest).split(":"));
+        List <String> priceRange = List.of(orderValidatorService.orderPriceIsWithinRange(orderRequest).split(":"));
+
+        if (!Objects.equals(limit.get(1), "Failure") && !Objects.equals(priceRange.get(1), "Failure")){
+            stringResults += "Success, " + limit.get(1) + ", " + priceRange.get(1);
+        }else{
+            stringResults += "Fail, " + limit.get(1) + ", " + priceRange.get(1);
+        }
+
+        return List.of(stringResults.split(","));
+    }
+
     public String placeOrder(OrderRequest orderRequest) {
+        // to validate validation list for success,
+        // index 0: the overall Status, success for failure
+        // index 1: Status for buy or sell limit
+        // index 2: Status for bid or price shift range
+
+        List<String> validationResults = validator(orderRequest);
+        if (Objects.equals(validationResults.get(0), "Fail")){
+            String addon = "";
+            if (Objects.equals(validationResults.get(1), "Failure")){
+                addon += "Quantity of Stock to buy exceeded limit.";
+            }
+            if (Objects.equals(validationResults.get(2), "Failure")){
+                addon += "";
+            }
+            return "Error: " + addon;
+        }
+
+        // Else use info as you see fit.
+        // If it is SuccessBoth, you can exchange from any of the exchanges
+        // If it is exchange 1 or 2 then you can only work with the valid one.
+
         WebClient webClient = WebClient.create(exchangeURL);
         try {
             String response = webClient.post()

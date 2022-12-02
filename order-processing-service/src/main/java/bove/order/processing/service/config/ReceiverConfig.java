@@ -1,6 +1,5 @@
-package bove.order.processing.service.receiver.config;
+package bove.order.processing.service.config;
 
-import bove.order.processing.service.receiver.controller.ReceiverController;
 import bove.order.processing.service.receiver.entity.Subscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,8 +10,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
@@ -48,8 +45,8 @@ public class ReceiverConfig {
     public RedisTemplate<String, Object> redisTemplate() {
         final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer(new Jackson2JsonRedisSerializer<Object>(Object.class));
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<Object>(Object.class));
+        redisTemplate.setHashKeySerializer(new Jackson2JsonRedisSerializer<>(Object.class));
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         redisTemplate.setConnectionFactory(lettuceConnectionFactory());
 
         return redisTemplate;
@@ -62,7 +59,7 @@ public class ReceiverConfig {
                 .disableCachingNullValues()
                 .serializeValuesWith(
                         RedisSerializationContext.SerializationPair.fromSerializer(
-                                new Jackson2JsonRedisSerializer<Object>(Object.class)));
+                                new Jackson2JsonRedisSerializer<>(Object.class)));
     }
 
     @Bean
