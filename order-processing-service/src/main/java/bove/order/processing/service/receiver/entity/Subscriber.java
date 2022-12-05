@@ -8,11 +8,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Subscriber implements MessageListener {
-    @Autowired
-    private MessagePublisher messagePublisher;
 
+    @Autowired
+    MessagePublisher messagePublisher;
+    Jackson2JsonRedisSerializer serializer = new Jackson2JsonRedisSerializer<>(Object.class);
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        messagePublisher.publish(message);
+        Object obj = serializer.deserialize(message.getBody());
+        messagePublisher.publish(obj);
     }
 }
