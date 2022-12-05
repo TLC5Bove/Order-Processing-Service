@@ -12,7 +12,6 @@ import java.io.Serializable;
 @Setter
 @ToString
 public class MarketData implements Serializable {
-
     @Serial
     private static final long serialVersionUID = -7817224776021728682L;
 
