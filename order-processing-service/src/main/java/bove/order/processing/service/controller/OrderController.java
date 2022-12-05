@@ -10,21 +10,28 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("api/v1/order")
 public class OrderController {
-    private final OrderService orderService;
-
     @Autowired
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
+    OrderService orderService;
+
+
+//    @Autowired
+//    public OrderController(OrderService orderService) {
+//        this.orderService = orderService;
+//    }
 
     @PostMapping
     public String placeOrderOnExchange(@RequestBody OrderRequest order, String exchange) {
         return orderService.placeOrder(order, exchange);
     }
 
+    @DeleteMapping("{orderId}")
+    public void cancelOrderOnExchange(@PathVariable String orderId, String exchange) {
+        orderService.placeCancelOrder(orderId, exchange);
+    }
+
     @GetMapping("{orderId}")
-    public OrderStatusResponse getOrderStatus(OrderStatusResponse orderStatusResponse, @PathVariable String orderId) {
-        return orderService.getOrderStatus(orderId);
+    public OrderStatusResponse getOrderStatus(@PathVariable String orderId, String exchange) {
+        return orderService.getOrderStatus(orderId, exchange);
     }
 
 }

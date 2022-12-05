@@ -1,5 +1,6 @@
 package bove.order.processing.service.service;
 
+import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
@@ -13,11 +14,15 @@ import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class OrderService {
     @Autowired
     OrderRepo orderRepo;
+
+    @Autowired
+    ExecutionService executionService;
     @Autowired
     OrderValidatorService orderValidatorService;
     @Value("${order.API_KEY}")
@@ -27,6 +32,16 @@ public class OrderService {
     private String exchangeURL;
     @Value("${order.EXCHANGE2_URL}")
     private String exchange2URL;
+
+    public Order findById(String orderId) {
+        Order order = orderRepo.findById(orderId).orElse(null);
+        System.out.println(order);
+        return order;
+    }
+
+    public void saveOrder(Order order) {
+        orderRepo.save(order);
+    }
 
     // validate the request
     public List<String> validator(OrderRequest orderRequest) {
@@ -50,23 +65,23 @@ public class OrderService {
         // index 1: Status for buy or sell limit
         // index 2: Status for bid or price shift range
 
-        List<String> validationResults = validator(orderRequest);
-        if (Objects.equals(validationResults.get(0), "Fail")) {
-            String addon = "";
-            if (Objects.equals(validationResults.get(1), "Failure")) {
-                addon += "Quantity of Stock to buy exceeded limit.";
-            }
-            if (Objects.equals(validationResults.get(2), "Failure")) {
-                addon += "";
-            }
-            return "Error: " + addon;
-        }
+//        List<String> validationResults = validator(orderRequest);
+//        if (Objects.equals(validationResults.get(0), "Fail")) {
+//            String addon = "";
+//            if (Objects.equals(validationResults.get(1), "Failure")) {
+//                addon += "Quantity of Stock to buy exceeded limit.";
+//            }
+//            if (Objects.equals(validationResults.get(2), "Failure")) {
+//                addon += "";
+//            }
+//            return "Error: " + addon;
+//        }
 
         // Else use info as you see fit.
         // If it is SuccessBoth, you can exchange from any of the exchanges
         // If it is exchange 1 or 2 then you can only work with the valid one.
 
-        WebClient webClient = WebClient.create("https://" + exchange + ".matraining.com");
+        WebClient webClient = WebClient.create("https://exchange.matraining.com");
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -84,7 +99,7 @@ public class OrderService {
     }
 
     public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
-        orderRepo.save(new Order(orderId,
+        saveOrder(new Order(orderId,
                 orderRequest.getProduct(),
                 orderRequest.getQuantity(),
                 orderRequest.getPrice(),
@@ -92,13 +107,14 @@ public class OrderService {
                 orderRequest.getType(),
                 new Date(),
                 exchange,
-                orderRequest.getUserId()));
+                orderRequest.getUserId())
+        );
 
         System.out.println();
     }
 
-    public OrderStatusResponse getOrderStatus(String orderId) {
-        WebClient webClient = WebClient.create(exchangeURL);
+    public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
+        WebClient webClient = WebClient.create("https://exchange.matraining.com");
 
         OrderStatusResponse response = webClient.get()
                 .uri("/" + exchangeAPIkey + "/order/" + orderId)
@@ -112,29 +128,65 @@ public class OrderService {
         return response;
     }
 
-    public String checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
+    private void checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Starting");
+        Order order = findById(orderId);
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed find order");
 
-        Order order = orderRepo.findById(orderId).get();
-        if (order.getStatus() == "complete") return "";
+        System.out.println(order);
 
-        Integer unexecutedQuantity = response.getQuantity() - response.getCumulatitiveQuantity();
-        if (response.getExecutions() == null) {
-            order.setStatus("pending");
-            order.setDateUpdated(new Date());
-            orderRepo.save(order);
-            return "This order with ID " + response.getOrderID() + " has not been executed";
-        } else if (response.getQuantity() >= 1 && response.getQuantity() > response.getCumulatitiveQuantity()) {
-            order.setStatus("partial");
-            order.setDateUpdated(new Date());
-            orderRepo.save(order);
-            return "This order with ID " + response.getOrderID() + " has been partially executed \n " + "" + unexecutedQuantity + "to " + response.getSide();
-        } else {
-            order.setStatus("complete");
-            order.setDateUpdated(new Date());
-            orderRepo.save(order);
-            return "This order with ID " + response.getOrderID() + " has been fully executed";
+        if (order == null) return;
+
+        if (Objects.equals(order.getStatus(), "complete")) {
+            for (Execution execution : response.getExecutions()) {
+//                order.addExecutions(execution);
+                executionService.save(execution);
+            }
+            return;
         }
 
+        if (response.getExecutions() == null) {
+            return;
+        }
+        if (response.getQuantity() >= 1 && response.getQuantity() > response.getCumulatitiveQuantity()) {
+            order.setStatus("partial");
+        } else {
+            order.setStatus("complete");
+        }
+        System.out.println(response.getExecutions());
+        for (Execution execution : response.getExecutions()) {
+//            order.addExecutions(execution);
+            executionService.save(execution);
+        }
+        order.setCumulatitivePrice(response.getCumulatitivePrice());
+        order.setCumulatitiveQuantity(response.getCumulatitiveQuantity());
+        order.setDateUpdated(new Date());
+        orderRepo.save(order);
+    }
+
+    public void placeCancelOrder(String orderId, String exchange) {
+        Optional<Order> ord = orderRepo.findById(orderId);
+
+        if (ord.isEmpty())
+            return;
+
+        Order order = ord.get();
+        if (order.getStatus() == "pending" || order.getStatus() == "partial") {
+            WebClient webClient = WebClient.create("https://" + exchange + ".matraining.com");
+
+            Boolean response = webClient.delete()
+                    .uri("/" + exchangeAPIkey + "/order/" + orderId)
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+            cancelOrder(response, order);
+
+        }
+
+    }
+
+    private void cancelOrder(Boolean response, Order order) {
+        if (response) order.setStatus("cancelled");
     }
 
 }
