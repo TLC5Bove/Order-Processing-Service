@@ -18,8 +18,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public String placeOrderOnExchange(@RequestBody OrderRequest order) {
-        return orderService.placeOrder(order);
+    public String placeOrderOnExchange(@RequestBody OrderRequest order, String exchange) {
+        return orderService.placeOrder(order, exchange);
     }
 
     @GetMapping("{orderId}")
