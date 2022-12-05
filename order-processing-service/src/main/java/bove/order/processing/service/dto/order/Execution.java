@@ -9,7 +9,6 @@ import java.util.Date;
 
 @Getter
 @Setter
-@ToString
 @Entity
 public class Execution {
     @Id
@@ -37,6 +36,16 @@ public class Execution {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Execution{" +
+                "id=" + id +
+                ", timestamp=" + timestamp +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                '}';
     }
 }
 

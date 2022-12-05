@@ -139,7 +139,7 @@ public class OrderService {
 
         if (Objects.equals(order.getStatus(), "complete")) {
             for (Execution execution : response.getExecutions()) {
-//                order.addExecutions(execution);
+                execution.setOrder(order);
                 executionService.save(execution);
             }
             return;
@@ -155,7 +155,7 @@ public class OrderService {
         }
         System.out.println(response.getExecutions());
         for (Execution execution : response.getExecutions()) {
-//            order.addExecutions(execution);
+            execution.setOrder(order);
             executionService.save(execution);
         }
         order.setCumulatitivePrice(response.getCumulatitivePrice());
