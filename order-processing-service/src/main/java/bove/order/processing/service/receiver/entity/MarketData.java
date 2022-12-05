@@ -16,11 +16,11 @@ public class MarketData implements Serializable {
     @Serial
     private static final long serialVersionUID = -7817224776021728682L;
 
-    private String ticker;
-    private Integer sellLimit;
-    private Integer buyLimit;
-    private Double lastTradedPrice;
-    private Double askPrice;
-    private Double bidPrice;
-    private Double maxPriceShift;
+    private Double MAX_PRICE_SHIFT;
+    private Double LAST_TRADED_PRICE;
+    private Double BID_PRICE;
+    private Integer SELL_LIMIT;
+    private Double ASK_PRICE;
+    private Integer BUY_LIMIT;
+    private String TICKER;
 }
