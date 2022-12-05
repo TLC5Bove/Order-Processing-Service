@@ -28,7 +28,7 @@ public class OrderService {
     private String exchangeURL;
     @Value("${order.EXCHANGE2_URL}")
     private String exchange2URL;
-
+  
     // validate the request
     public List<String> validator(OrderRequest orderRequest){
         String stringResults = "";
@@ -68,6 +68,11 @@ public class OrderService {
         // If it is exchange 1 or 2 then you can only work with the valid one.
 
         WebClient webClient = WebClient.create(exchangeURL);
+      
+    // place buy or sell order to exchange
+    public String placeOrder(OrderRequest orderRequest) {
+        System.out.println(orderRequest);
+        WebClient webClient = WebClient.create(exchange2URL);
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -79,10 +84,11 @@ public class OrderService {
             saveOrder(orderRequest, orderId);
             return orderId;
         } catch (Exception e) {
-            return "Error => " + e;
+            return "Error" + e;
         }
     }
 
+    // persist the order in the t_order table with the uniqueId(response from placing order)
     public void saveOrder(OrderRequest orderRequest, String orderId) {
         orderRepo.save(new Order(orderId,
                 orderRequest.getProduct(),
@@ -93,6 +99,7 @@ public class OrderService {
         System.out.println();
     }
 
+    // check the status of the order with order id
     public OrderStatusResponse getOrderStatus(String orderId) {
         WebClient webClient = WebClient.create(exchangeURL);
 
@@ -108,6 +115,7 @@ public class OrderService {
         return response;
     }
 
+    // update the status field in the t_order table after checking current order status
     public String checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
 
         Order order = orderRepo.findById(orderId).get();

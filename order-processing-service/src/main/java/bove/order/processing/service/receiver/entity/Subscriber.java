@@ -3,7 +3,6 @@ package bove.order.processing.service.receiver.entity;
 import bove.order.processing.service.config.MessagePublisher;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Component;
 
 @Component

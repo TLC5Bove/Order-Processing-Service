@@ -16,14 +16,5 @@ public class OrderStatusResponse {
     private String orderType;
     private Integer cumulatitiveQuantity;
     private Double cumulatitivePrice;
-
-
-}
-
-@Data
-class Execution {
-    private Date timestamp;
-    private Double price;
-    private Integer quantity;
 }
 
