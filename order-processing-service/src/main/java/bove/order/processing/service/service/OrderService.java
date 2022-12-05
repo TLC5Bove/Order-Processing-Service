@@ -75,22 +75,27 @@ public class OrderService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
+            assert response != null;
             String orderId = response.substring(1, response.length() - 1);
-            saveOrder(orderRequest, orderId);
+            saveOrder(orderRequest, orderId, "exchange 1");
             return orderId;
         } catch (Exception e) {
             return "Error => " + e;
         }
     }
 
-    public void saveOrder(OrderRequest orderRequest, String orderId) {
+    public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
         orderRepo.save(new Order(orderId,
                 orderRequest.getProduct(),
                 orderRequest.getQuantity(),
                 orderRequest.getPrice(),
                 orderRequest.getSide(),
-                orderRequest.getType(), new Date()));
-        System.out.println();
+                orderRequest.getType(),
+                new Date(),
+                exchange,
+                orderRequest.getUserId()));
+
+                System.out.println();
     }
 
     public OrderStatusResponse getOrderStatus(String orderId) {

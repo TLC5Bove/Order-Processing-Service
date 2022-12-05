@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Controller
 public class ReceiverController {
@@ -18,7 +19,6 @@ public class ReceiverController {
     @Autowired
     ReceiverService receiverService;
     public void updateCache( String ticker, StockResponseDto stock){
-        System.out.println(ticker);
         receiverService.updateCache(ticker, stock);
     }
 
@@ -28,7 +28,7 @@ public class ReceiverController {
         String response = message.getSource().toString();
 
         String refactored = response.replace('{', ' ').replace('}', ' ').strip();
-        List<String> res = List.of(refactored.split(",")).stream().map(str -> str.split(":")[1]).toList();
+        List<String> res = Stream.of(refactored.split(",")).map(str -> str.split("=")[1]).toList();
 
         String exchange = res.get(2).replace('\"', ' ').strip();
         String ticker = res.get(1).replace('\"', ' ').strip() + "_" + exchange;
