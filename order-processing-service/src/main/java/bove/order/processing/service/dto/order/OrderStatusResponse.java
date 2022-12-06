@@ -12,7 +12,7 @@ public class OrderStatusResponse {
     private int quantity;
     private double price;
     private String side;
-    private List<Execution> executions = new ArrayList<>();
+    private List<Execution> executions;
     private String orderID;
     private String orderType;
     private int cumulatitiveQuantity;

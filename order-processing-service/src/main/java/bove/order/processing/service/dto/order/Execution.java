@@ -1,11 +1,14 @@
 package bove.order.processing.service.dto.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -17,6 +20,7 @@ public class Execution {
     private Date timestamp;
     private double price;
     private int quantity;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
@@ -30,12 +34,12 @@ public class Execution {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Execution execution = (Execution) o;
-        return id == execution.id && Double.compare(execution.price, price) == 0 && quantity == execution.quantity && timestamp.equals(execution.timestamp) && order.equals(execution.order);
+        return id == execution.id && Double.compare(execution.price, price) == 0 && quantity == execution.quantity && timestamp.equals(execution.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, timestamp, price, quantity);
     }
 
     @Override

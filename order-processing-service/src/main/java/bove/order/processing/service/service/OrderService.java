@@ -34,9 +34,7 @@ public class OrderService {
     private String exchange2URL;
 
     public Order findById(String orderId) {
-        Order order = orderRepo.findById(orderId).orElse(null);
-        System.out.println(order);
-        return order;
+        return orderRepo.findById(orderId).orElse(null);
     }
 
     public void saveOrder(Order order) {
@@ -81,7 +79,7 @@ public class OrderService {
         // If it is SuccessBoth, you can exchange from any of the exchanges
         // If it is exchange 1 or 2 then you can only work with the valid one.
 
-        WebClient webClient = WebClient.create("https://exchange.matraining.com");
+        WebClient webClient = WebClient.create("https://exchange2.matraining.com");
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -91,7 +89,7 @@ public class OrderService {
                     .block();
             assert response != null;
             String orderId = response.substring(1, response.length() - 1);
-            saveOrder(orderRequest, orderId, "exchange 1");
+            saveOrder(orderRequest, orderId, "exchange2");
             return orderId;
         } catch (Exception e) {
             return "Error => " + e;
@@ -114,7 +112,7 @@ public class OrderService {
     }
 
     public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
-        WebClient webClient = WebClient.create("https://exchange.matraining.com");
+        WebClient webClient = WebClient.create("https://exchange2.matraining.com");
 
         OrderStatusResponse response = webClient.get()
                 .uri("/" + exchangeAPIkey + "/order/" + orderId)
@@ -124,7 +122,6 @@ public class OrderService {
 
         assert response != null;
         checkOrderExecutionStatus(response, orderId);
-
         return response;
     }
 
@@ -133,28 +130,24 @@ public class OrderService {
         Order order = findById(orderId);
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed find order");
 
-        System.out.println(order);
-
         if (order == null) return;
 
-        if (Objects.equals(order.getStatus(), "complete")) {
-            for (Execution execution : response.getExecutions()) {
-                execution.setOrder(order);
-                executionService.save(execution);
-            }
-            return;
-        }
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed first check");
 
-        if (response.getExecutions() == null) {
-            return;
-        }
+        if (response.getExecutions() == order.getExecutions()) return;
+
+        if (Objects.equals(order.getStatus(), "complete")) return;
+
+        if (response.getExecutions() == null) return;
+
         if (response.getQuantity() >= 1 && response.getQuantity() > response.getCumulatitiveQuantity()) {
             order.setStatus("partial");
         } else {
             order.setStatus("complete");
         }
-        System.out.println(response.getExecutions());
+
         for (Execution execution : response.getExecutions()) {
+            if (order.getExecutions().contains(execution)) continue;
             execution.setOrder(order);
             executionService.save(execution);
         }
