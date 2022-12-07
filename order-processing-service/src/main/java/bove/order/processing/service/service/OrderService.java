@@ -11,10 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -97,15 +94,19 @@ public class OrderService {
     }
 
     public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
+        // Generate a unique id to mark split orders
+        String osId = UUID.randomUUID().toString();
         saveOrder(new Order(orderId,
-                orderRequest.getProduct(),
-                orderRequest.getQuantity(),
-                orderRequest.getPrice(),
-                orderRequest.getSide(),
-                orderRequest.getType(),
-                new Date(),
-                exchange,
-                orderRequest.getUserId())
+                        orderRequest.getProduct(),
+                        orderRequest.getQuantity(),
+                        orderRequest.getPrice(),
+                        orderRequest.getSide(),
+                        orderRequest.getType(),
+                        new Date(),
+                        exchange,
+                        orderRequest.getUserId(),
+                        osId
+                )
         );
 
         System.out.println();

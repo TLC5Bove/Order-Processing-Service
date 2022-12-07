@@ -28,6 +28,8 @@ public class Order {
     private Date dateClosed;
     private Date dateUpdated;
     private String status;
+
+    private String osId;
     private String exchange;
     private int userId;
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -43,7 +45,7 @@ public class Order {
                  String type,
                  Date dateCreated,
                  String exchange,
-                 int userId) {
+                 int userId, String osId) {
         this.orderID = id;
         this.quantity = quantity;
         this.price = price;
@@ -53,6 +55,7 @@ public class Order {
         this.exchange = exchange;
         this.userId = userId;
         this.status = "pending";
+        this.osId = osId;
     }
 
     @Override
@@ -84,6 +87,7 @@ public class Order {
                 ", status='" + status + '\'' +
                 ", exchange='" + exchange + '\'' +
                 ", userId=" + userId +
+                ", osId=" + osId +
                 ", cumulatitiveQuantity=" + cumulatitiveQuantity +
                 ", cumulatitivePrice=" + cumulatitivePrice +
                 '}';
