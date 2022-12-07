@@ -4,15 +4,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Entity(name = "T_order")
 @RequiredArgsConstructor
+@Getter
+@Setter
 public class Order {
     private final Date orderDate = new Date();
     @Id
