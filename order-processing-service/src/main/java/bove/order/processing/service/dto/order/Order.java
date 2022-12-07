@@ -8,13 +8,11 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 
 @Entity(name = "T_order")
-@Getter
-@Setter
-@ToString
 @RequiredArgsConstructor
-
 public class Order {
     private final Date orderDate = new Date();
     @Id
@@ -33,7 +31,7 @@ public class Order {
     private String exchange;
     private int userId;
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private ArrayList<Execution> executions;
+    private List<Execution> executions;
     private int cumulatitiveQuantity;
     private double cumulatitivePrice;
 
@@ -57,10 +55,37 @@ public class Order {
         this.status = "pending";
     }
 
-    public void addExecutions(Execution execution) {
-        if (executions == null) {
-            executions = new ArrayList<>();
-        }
-        executions.add(execution);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return quantity == order.quantity && userId == order.userId && cumulatitiveQuantity == order.cumulatitiveQuantity && Double.compare(order.cumulatitivePrice, cumulatitivePrice) == 0 && orderDate.equals(order.orderDate) && orderID.equals(order.orderID) && product.equals(order.product) && price.equals(order.price) && side.equals(order.side) && type.equals(order.type) && dateCreated.equals(order.dateCreated) && Objects.equals(dateClosed, order.dateClosed) && Objects.equals(dateUpdated, order.dateUpdated) && status.equals(order.status) && exchange.equals(order.exchange);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderDate, orderID, product, quantity, price, side, type, dateCreated, dateClosed, dateUpdated, status, exchange, userId, cumulatitiveQuantity, cumulatitivePrice);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderDate=" + orderDate +
+                ", orderID='" + orderID + '\'' +
+                ", product='" + product + '\'' +
+                ", quantity=" + quantity +
+                ", price=" + price +
+                ", side='" + side + '\'' +
+                ", type='" + type + '\'' +
+                ", dateCreated=" + dateCreated +
+                ", dateClosed=" + dateClosed +
+                ", dateUpdated=" + dateUpdated +
+                ", status='" + status + '\'' +
+                ", exchange='" + exchange + '\'' +
+                ", userId=" + userId +
+                ", cumulatitiveQuantity=" + cumulatitiveQuantity +
+                ", cumulatitivePrice=" + cumulatitivePrice +
+                '}';
     }
 }
