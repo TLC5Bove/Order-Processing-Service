@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Subscriber implements MessageListener {
-
     @Autowired
     MessagePublisher messagePublisher;
     Jackson2JsonRedisSerializer serializer = new Jackson2JsonRedisSerializer<>(Object.class);

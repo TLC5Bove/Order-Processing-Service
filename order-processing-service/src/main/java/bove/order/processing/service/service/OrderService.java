@@ -4,6 +4,7 @@ import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
+import bove.order.processing.service.mqProducer.MQMessagePublisher;
 import bove.order.processing.service.repository.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,14 +21,14 @@ import java.util.Optional;
 public class OrderService {
     @Autowired
     OrderRepo orderRepo;
-
     @Autowired
     ExecutionService executionService;
     @Autowired
     OrderValidatorService orderValidatorService;
+    @Autowired
+    MQMessagePublisher mqMessagePublisher;
     @Value("${order.API_KEY}")
     private String exchangeAPIkey;
-
     @Value("${order.EXCHANGE_URL}")
     private String exchangeURL;
     @Value("${order.EXCHANGE2_URL}")
@@ -79,7 +80,7 @@ public class OrderService {
         // If it is SuccessBoth, you can exchange from any of the exchanges
         // If it is exchange 1 or 2 then you can only work with the valid one.
 
-        WebClient webClient = WebClient.create("https://exchange2.matraining.com");
+        WebClient webClient = WebClient.create("https://exchange.matraining.com");
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -88,8 +89,13 @@ public class OrderService {
                     .bodyToMono(String.class)
                     .block();
             assert response != null;
+
             String orderId = response.substring(1, response.length() - 1);
+
+            mqMessagePublisher.publishMessage(orderId);
+
             saveOrder(orderRequest, orderId, "exchange2");
+
             return orderId;
         } catch (Exception e) {
             return "Error => " + e;
@@ -107,8 +113,6 @@ public class OrderService {
                 exchange,
                 orderRequest.getUserId())
         );
-
-        System.out.println();
     }
 
     public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
