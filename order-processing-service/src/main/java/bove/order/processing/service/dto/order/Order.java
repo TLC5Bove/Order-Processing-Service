@@ -19,7 +19,6 @@ public class Order {
     @Column(name = "id", nullable = false)
     @NotNull
     private String orderID;
-    //    private String id;
     private String product;
     private int quantity;
     private Double price;

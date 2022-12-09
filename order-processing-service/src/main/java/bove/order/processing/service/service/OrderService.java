@@ -1,5 +1,6 @@
 package bove.order.processing.service.service;
 
+import bove.order.processing.service.dto.message.IdAndExchange;
 import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
@@ -92,7 +93,11 @@ public class OrderService {
 
             String orderId = response.substring(1, response.length() - 1);
 
-            mqMessagePublisher.publishMessage(orderId);
+            IdAndExchange message = new IdAndExchange();
+            message.setId(orderId);
+            message.setExchange(exchange);
+
+            mqMessagePublisher.publishMessage(message);
 
             saveOrder(orderRequest, orderId, "exchange2");
 
