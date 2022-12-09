@@ -16,7 +16,7 @@ public class MarketDataRepository implements MarketDataDao {
 
     @Override
     public void saveData(MarketData data) {
-        hashOperations.opsForHash().putIfAbsent(hashReference, data.getTicker(), data);
+        hashOperations.opsForHash().putIfAbsent(hashReference, data.getTICKER(), data);
     }
 
     @Override
@@ -26,7 +26,7 @@ public class MarketDataRepository implements MarketDataDao {
 
     @Override
     public void updateMarketData(MarketData data) {
-        hashOperations.opsForHash().put(hashReference, data.getTicker(), data);
+        hashOperations.opsForHash().put(hashReference, data.getTICKER(), data);
     }
 
     @Override
