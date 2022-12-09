@@ -1,6 +1,7 @@
 package bove.order.processing.service.dto.order;
 
 import lombok.Data;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,6 +14,7 @@ public class OrderStatusResponse {
     private double price;
     private String side;
     private List<Execution> executions;
+    @NonNull
     private String orderID;
     private String orderType;
     private int cumulatitiveQuantity;

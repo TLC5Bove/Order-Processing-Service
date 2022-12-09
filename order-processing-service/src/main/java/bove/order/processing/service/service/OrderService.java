@@ -5,7 +5,7 @@ import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
-import bove.order.processing.service.mqProducer.MQMessagePublisher;
+import bove.order.processing.service.mqPubSub.MQMessagePublisher;
 import bove.order.processing.service.repository.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,11 +95,12 @@ public class OrderService {
 
             IdAndExchange message = new IdAndExchange();
             message.setId(orderId);
-            message.setExchange(exchange);
+            message.setExchange("exchange");
 
-            mqMessagePublisher.publishMessage(message);
+            mqMessagePublisher.publishMessageToODS(message);
+            mqMessagePublisher.publishMessageToLORS(message);
 
-            saveOrder(orderRequest, orderId, "exchange2");
+            saveOrder(orderRequest, orderId, "exchange");
 
             return orderId;
         } catch (Exception e) {
