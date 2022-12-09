@@ -9,7 +9,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class MarketDataRunner implements CommandLineRunner {
@@ -58,13 +59,14 @@ public class MarketDataRunner implements CommandLineRunner {
             throw new RuntimeException(e);
         }
 
-        marketDataDao.getAllMarketData().forEach((k, v) -> System.out.println(k +": "+v));
+        marketDataDao.getAllMarketData().forEach((k, v) -> System.out.println(k + ": " + v));
     }
 
     private void saveMarketDataToCache(Object object, String exchange) {
         MarketData marketData = new Gson().fromJson(object.toString(), MarketData.class);
-        String ticker = marketData.getTICKER()+"_"+exchange;
+        String ticker = marketData.getTICKER() + "_" + exchange;
         marketData.setTICKER(ticker);
+        marketDataDao.saveData(marketData);
     }
 
 
