@@ -20,6 +20,7 @@ public class OrderRequest {
     private String type;
     private int portfolioId;
     private int userId;
+    private String osId;
     private Date orderDate;
 }
 
