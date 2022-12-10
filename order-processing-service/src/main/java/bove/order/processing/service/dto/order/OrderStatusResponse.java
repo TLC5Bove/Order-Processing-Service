@@ -14,7 +14,6 @@ public class OrderStatusResponse {
     private double price;
     private String side;
     private List<Execution> executions;
-    @NonNull
     private String orderID;
     private String orderType;
     private int cumulatitiveQuantity;

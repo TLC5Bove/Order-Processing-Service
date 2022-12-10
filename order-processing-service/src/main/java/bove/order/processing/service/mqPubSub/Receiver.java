@@ -15,8 +15,9 @@ public class Receiver {
     @Autowired
     OrderService orderService;
 
-    @RabbitListener(queues = RabbitConfig.TRACKING_QUEUE)
+    @RabbitListener(queues = RabbitConfig.COMPLETION_QUEUE)
     public void listener(OrderStatusResponse message) {
+        System.out.println(message.getOrderID());
         Order order = orderService.findById(message.getOrderID());
         order.setStatus("complete");
         order.setCumulatitivePrice(message.getCumulatitivePrice());
