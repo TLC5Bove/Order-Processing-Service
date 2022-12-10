@@ -18,7 +18,6 @@ public class Order {
     @Id
     @Column(name = "id", nullable = false)
     private String orderID;
-    //    private String id;
     private String product;
     private int quantity;
     private Double price;

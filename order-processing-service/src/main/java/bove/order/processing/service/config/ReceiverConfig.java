@@ -24,7 +24,6 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 public class ReceiverConfig {
-
     @Autowired
     Subscriber subscriber;
 

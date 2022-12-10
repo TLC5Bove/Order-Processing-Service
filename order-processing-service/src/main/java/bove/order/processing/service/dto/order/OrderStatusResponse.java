@@ -1,6 +1,7 @@
 package bove.order.processing.service.dto.order;
 
 import lombok.Data;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Date;

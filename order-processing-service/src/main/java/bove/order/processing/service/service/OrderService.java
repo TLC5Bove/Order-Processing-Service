@@ -1,9 +1,11 @@
 package bove.order.processing.service.service;
 
+import bove.order.processing.service.dto.message.IdAndExchange;
 import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
+import bove.order.processing.service.mqPubSub.MQMessagePublisher;
 import bove.order.processing.service.dto.order.enums.Action;
 import bove.order.processing.service.dto.order.enums.ValidatorResponse;
 import bove.order.processing.service.repository.ExecutionRepo;
@@ -23,14 +25,14 @@ import java.util.UUID;
 public class OrderService {
     @Autowired
     OrderRepo orderRepo;
-
     @Autowired
     ExecutionService executionService;
     @Autowired
     OrderValidatorService orderValidatorService;
+    @Autowired
+    MQMessagePublisher mqMessagePublisher;
     @Value("${order.API_KEY}")
     private String exchangeAPIkey;
-
     @Value("${order.EXCHANGE_URL}")
     private String exchangeURL;
     @Value("${order.EXCHANGE2_URL}")
@@ -125,8 +127,18 @@ public class OrderService {
                     .bodyToMono(String.class)
                     .block();
             assert response != null;
+
             String orderId = response.substring(1, response.length() - 1);
-            saveOrder(orderRequest, orderId, "exchange2");
+
+            IdAndExchange message = new IdAndExchange();
+            message.setId(orderId);
+            message.setExchange("exchange");
+
+            mqMessagePublisher.publishMessageToODS(message);
+            mqMessagePublisher.publishMessageToLORS(message);
+
+            saveOrder(orderRequest, orderId, "exchange");
+
             return orderId;
         } catch (Exception e) {
             return "Error => " + e;
@@ -152,8 +164,6 @@ public class OrderService {
                         osId
                 )
         );
-
-        System.out.println();
     }
 
     public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
