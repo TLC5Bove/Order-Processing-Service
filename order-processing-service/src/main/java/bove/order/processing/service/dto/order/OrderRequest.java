@@ -11,7 +11,6 @@ import java.util.Date;
 @RequiredArgsConstructor
 @ToString
 public class OrderRequest {
-
     @JsonProperty
     private String product;
     private Integer quantity;
