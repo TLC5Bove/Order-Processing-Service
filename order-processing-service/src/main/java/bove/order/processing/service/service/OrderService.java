@@ -5,7 +5,7 @@ import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
-import bove.order.processing.service.mqPubSub.MQMessagePublisher;
+import bove.order.processing.service.messaging.MQMessagePublisher;
 import bove.order.processing.service.repository.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

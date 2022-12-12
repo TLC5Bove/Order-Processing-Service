@@ -1,4 +1,4 @@
-package bove.order.processing.service.mqPubSub;
+package bove.order.processing.service.messaging;
 
 import bove.order.processing.service.config.RabbitConfig;
 import bove.order.processing.service.dto.message.IdAndExchange;

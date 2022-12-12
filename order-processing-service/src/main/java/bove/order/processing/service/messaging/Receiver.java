@@ -1,4 +1,4 @@
-package bove.order.processing.service.mqPubSub;
+package bove.order.processing.service.messaging;
 
 import bove.order.processing.service.config.RabbitConfig;
 import bove.order.processing.service.dto.order.Order;
@@ -24,5 +24,10 @@ public class Receiver {
         order.setCumulatitiveQuantity(message.getCumulatitiveQuantity());
         order.setDateUpdated(new Date());
         orderService.saveOrder(order);
+    }
+
+    @RabbitListener(queues = RabbitConfig.ORDER_QUEUE)
+    public void orderListener(Order order){
+
     }
 }
