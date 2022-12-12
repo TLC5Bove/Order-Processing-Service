@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="OPS" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="corretto-18" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <envs>
+      <env name="API_KEY" value="a30f64dc-2cd5-44d0-a09a-9fe319bf63e0" />
+      <env name="EXCHANGE_URL" value="http://exchange.matraining.com" />
+      <env name="EXCHANGE2_URL" value="exchange2.matraining.com" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="bove.order.processing.service.OrderProcessingServiceApplication" />
+    <module name="order-processing-service" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

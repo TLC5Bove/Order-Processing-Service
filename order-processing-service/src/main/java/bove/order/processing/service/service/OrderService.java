@@ -5,7 +5,11 @@ import bove.order.processing.service.dto.order.Execution;
 import bove.order.processing.service.dto.order.Order;
 import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
+
 import bove.order.processing.service.messaging.MQMessagePublisher;
+import bove.order.processing.service.dto.order.enums.Action;
+import bove.order.processing.service.dto.order.enums.ValidatorResponse;
+import bove.order.processing.service.repository.ExecutionRepo;
 import bove.order.processing.service.repository.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +18,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -34,6 +38,8 @@ public class OrderService {
     private String exchangeURL;
     @Value("${order.EXCHANGE2_URL}")
     private String exchange2URL;
+    @Autowired
+    private ExecutionRepo executionRepo;
 
     public Order findById(String orderId) {
         return orderRepo.findById(orderId).orElse(null);
@@ -44,44 +50,76 @@ public class OrderService {
     }
 
     // validate the request
-    public List<String> validator(OrderRequest orderRequest) {
+    public Action validator(OrderRequest orderRequest) {
         String stringResults = "";
 
-        List<String> limit = List.of(orderValidatorService.quantityIsWithinLimit(orderRequest).split(":"));
-        List<String> priceRange = List.of(orderValidatorService.orderPriceIsWithinRange(orderRequest).split(":"));
+        ValidatorResponse quantityLimit = orderValidatorService.quantityIsWithinLimit(orderRequest);
+        ValidatorResponse priceRange = orderValidatorService.orderPriceIsWithinRange(orderRequest);
 
-        if (!Objects.equals(limit.get(1), "Failure") && !Objects.equals(priceRange.get(1), "Failure")) {
-            stringResults += "Success, " + limit.get(1) + ", " + priceRange.get(1);
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_BOTH) && priceRange.equals(ValidatorResponse.SUCCESS_BOTH)) {
+            return Action.SPLIT;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_BOTH) && priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE1) ||
+                (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE1) && priceRange.equals(ValidatorResponse.SUCCESS_BOTH))) {
+            return Action.EXCHANGE1;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_BOTH) && priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE2) ||
+                (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE2) && priceRange.equals(ValidatorResponse.SUCCESS_BOTH))) {
+            return Action.EXCHANGE2;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE1) &&
+                priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE1)) {
+            return Action.EXCHANGE1;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE2) &&
+                priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE2)) {
+            return Action.EXCHANGE2;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE1) &&
+                priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE2)) {
+            return Action.BOTH;
+        }
+        if (quantityLimit.equals(ValidatorResponse.SUCCESS_EXCHANGE2) &&
+                priceRange.equals(ValidatorResponse.SUCCESS_EXCHANGE1)) {
+            return Action.BOTH;
+        }
+        if (quantityLimit.equals(ValidatorResponse.FAIL) && priceRange.equals(ValidatorResponse.FAIL)) {
+            return Action.BOTH;
+        }
+        if (quantityLimit.equals(ValidatorResponse.FAIL)) {
+            return Action.INVALID_LIMIT;
+        }
+        if (priceRange.equals(ValidatorResponse.FAIL)) {
+            return Action.RANGE_EXCEEDED;
         } else {
-            stringResults += "Fail, " + limit.get(1) + ", " + priceRange.get(1);
+            return Action.BOTH;
         }
 
-        return List.of(stringResults.split(","));
     }
 
     public String placeOrder(OrderRequest orderRequest, String exchange) {
-        // to validate validation list for success,
-        // index 0: the overall Status, success for failure
-        // index 1: Status for buy or sell limit
-        // index 2: Status for bid or price shift range
+        String exchange1 = "exchange";
+        String exchange2 = "exchange2";
 
-//        List<String> validationResults = validator(orderRequest);
-//        if (Objects.equals(validationResults.get(0), "Fail")) {
-//            String addon = "";
-//            if (Objects.equals(validationResults.get(1), "Failure")) {
-//                addon += "Quantity of Stock to buy exceeded limit.";
-//            }
-//            if (Objects.equals(validationResults.get(2), "Failure")) {
-//                addon += "";
-//            }
-//            return "Error: " + addon;
-//        }
+        Action action = validator(orderRequest);
+        // TODO: 1. ACTION = BOTH CALL SPLIT
+        // TODO: 2. ACTION = EXCHANGE1 CALL SPLIT FOR EXCHANGE 1
+        // TODO 3. ACTION == EXCHANGE2 CALL SPLIT FOR EXCHANGE2
+        // TODO 4: ELSE RETURN ERROR WITH ACTION.VALUE();
 
-        // Else use info as you see fit.
-        // If it is SuccessBoth, you can exchange from any of the exchanges
-        // If it is exchange 1 or 2 then you can only work with the valid one.
+        if (action.equals(Action.BOTH)) {
+            splitOrder(orderRequest);
+        } else if (action.equals(Action.EXCHANGE1)) {
+            return decideExchangeToPlaceOrder(orderRequest, exchange1);
+        } else if (action.equals(Action.EXCHANGE2)) {
+            return decideExchangeToPlaceOrder(orderRequest, exchange2);
+        }
+        return action.value();
+    }
 
-        WebClient webClient = WebClient.create("https://exchange.matraining.com");
+    public String decideExchangeToPlaceOrder(OrderRequest orderRequest, String exchange) {
+
+        WebClient webClient = WebClient.create("https://" + exchange + ".matraining.com");
         try {
             String response = webClient.post()
                     .uri("/" + exchangeAPIkey + "/order")
@@ -108,16 +146,24 @@ public class OrderService {
         }
     }
 
+    public void splitOrder(OrderRequest orderRequest) {
+        System.out.println("split");
+    }
+
     public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
+        // Generate a unique id to mark split orders
+        String osId = UUID.randomUUID().toString();
         saveOrder(new Order(orderId,
-                orderRequest.getProduct(),
-                orderRequest.getQuantity(),
-                orderRequest.getPrice(),
-                orderRequest.getSide(),
-                orderRequest.getType(),
-                new Date(),
-                exchange,
-                orderRequest.getUserId())
+                        orderRequest.getProduct(),
+                        orderRequest.getQuantity(),
+                        orderRequest.getPrice(),
+                        orderRequest.getSide(),
+                        orderRequest.getType(),
+                        new Date(),
+                        exchange,
+                        orderRequest.getUserId(),
+                        osId
+                )
         );
     }
 
