@@ -135,7 +135,7 @@ public class OrderService {
             message.setId(orderId);
             message.setExchange("exchange");
 
-            mqMessagePublisher.publishMessageToODS(message);
+            mqMessagePublisher.publishMessageToOBS(message);
             mqMessagePublisher.publishMessageToLORS(message);
 
             saveOrder(orderRequest, orderId, "exchange");
@@ -151,8 +151,6 @@ public class OrderService {
     }
 
     public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
-        // Generate a unique id to mark split orders
-        String osId = UUID.randomUUID().toString();
         saveOrder(new Order(orderId,
                         orderRequest.getProduct(),
                         orderRequest.getQuantity(),
@@ -162,7 +160,7 @@ public class OrderService {
                         new Date(),
                         exchange,
                         orderRequest.getUserId(),
-                        osId
+                        orderRequest.getOsId()
                 )
         );
     }
@@ -228,6 +226,7 @@ public class OrderService {
                     .retrieve()
                     .bodyToMono(Boolean.class)
                     .block();
+            assert response != null;
             cancelOrder(response, order);
 
         }

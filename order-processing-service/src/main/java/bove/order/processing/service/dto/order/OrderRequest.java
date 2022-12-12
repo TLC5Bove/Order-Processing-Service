@@ -17,8 +17,8 @@ public class OrderRequest {
     private Double price;
     private String side;
     private String type;
-    private int portfolioId;
-    private int userId;
+    private Long portfolioId;
+    private Long userId;
     private String osId;
     private Date orderDate;
 }

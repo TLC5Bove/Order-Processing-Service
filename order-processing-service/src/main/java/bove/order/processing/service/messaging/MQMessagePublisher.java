@@ -11,11 +11,15 @@ public class MQMessagePublisher {
     @Autowired
     RabbitTemplate rabbitTemplate;
 
-    public void publishMessageToODS(IdAndExchange message){
+    public void publishMessageToOBS(IdAndExchange message){
         rabbitTemplate.convertAndSend(RabbitConfig.OBS_EXCHANGE, RabbitConfig.ROUTING_KEY, message);
     }
 
     public void publishMessageToLORS(IdAndExchange message){
         rabbitTemplate.convertAndSend(RabbitConfig.TRACKING_EXCHANGE, RabbitConfig.ROUTING_KEY, message);
+    }
+
+    public void publishOrderCompletionMessage(String message){
+        rabbitTemplate.convertAndSend(RabbitConfig.CLIENT_QUEUE, RabbitConfig.ROUTING_KEY, message);
     }
 }

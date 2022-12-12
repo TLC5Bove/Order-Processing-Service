@@ -30,7 +30,7 @@ public class Order {
 
     private String osId;
     private String exchange;
-    private int userId;
+    private Long userId;
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Execution> executions;
     private int cumulatitiveQuantity;
@@ -44,7 +44,7 @@ public class Order {
                  String type,
                  Date dateCreated,
                  String exchange,
-                 int userId, String osId) {
+                 Long userId, String osId) {
         this.orderID = id;
         this.quantity = quantity;
         this.price = price;
@@ -62,7 +62,7 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return quantity == order.quantity && userId == order.userId && cumulatitiveQuantity == order.cumulatitiveQuantity && Double.compare(order.cumulatitivePrice, cumulatitivePrice) == 0 && orderDate.equals(order.orderDate) && orderID.equals(order.orderID) && product.equals(order.product) && price.equals(order.price) && side.equals(order.side) && type.equals(order.type) && dateCreated.equals(order.dateCreated) && Objects.equals(dateClosed, order.dateClosed) && Objects.equals(dateUpdated, order.dateUpdated) && status.equals(order.status) && exchange.equals(order.exchange);
+        return quantity == order.quantity && Objects.equals(userId, order.userId) && cumulatitiveQuantity == order.cumulatitiveQuantity && Double.compare(order.cumulatitivePrice, cumulatitivePrice) == 0 && orderDate.equals(order.orderDate) && orderID.equals(order.orderID) && product.equals(order.product) && price.equals(order.price) && side.equals(order.side) && type.equals(order.type) && dateCreated.equals(order.dateCreated) && Objects.equals(dateClosed, order.dateClosed) && Objects.equals(dateUpdated, order.dateUpdated) && status.equals(order.status) && exchange.equals(order.exchange);
     }
 
     @Override
