@@ -97,24 +97,25 @@ public class OrderService {
 
     }
 
-    public String placeOrder(OrderRequest orderRequest) {
+    public void placeOrder(OrderRequest orderRequest) {
         String exchange1 = "exchange";
         String exchange2 = "exchange2";
 
-        Action action = validator(orderRequest);
+//        Action action = validator(orderRequest);
         // TODO: 1. ACTION = BOTH CALL SPLIT
         // TODO: 2. ACTION = EXCHANGE1 CALL SPLIT FOR EXCHANGE 1
         // TODO 3. ACTION == EXCHANGE2 CALL SPLIT FOR EXCHANGE2
         // TODO 4: ELSE RETURN ERROR WITH ACTION.VALUE();
 
-        if (action.equals(Action.BOTH)) {
-            splitOrder(orderRequest);
-        } else if (action.equals(Action.EXCHANGE1)) {
-            return decideExchangeToPlaceOrder(orderRequest, exchange1);
-        } else if (action.equals(Action.EXCHANGE2)) {
-            return decideExchangeToPlaceOrder(orderRequest, exchange2);
-        }
-        return action.value();
+//        if (action.equals(Action.BOTH)) {
+//            splitOrder(orderRequest);
+//        } else if (action.equals(Action.EXCHANGE1)) {
+//            return decideExchangeToPlaceOrder(orderRequest, exchange1);
+//        } else if (action.equals(Action.EXCHANGE2)) {
+//            return decideExchangeToPlaceOrder(orderRequest, exchange2);
+//        }
+//        return action.value();
+        decideExchangeToPlaceOrder(orderRequest, "exchange");
     }
 
     public String decideExchangeToPlaceOrder(OrderRequest orderRequest, String exchange) {
@@ -135,7 +136,7 @@ public class OrderService {
             message.setId(orderId);
             message.setExchange("exchange");
 
-            mqMessagePublisher.publishMessageToODS(message);
+            mqMessagePublisher.publishMessageToOBS(message);
             mqMessagePublisher.publishMessageToLORS(message);
 
             saveOrder(orderRequest, orderId, "exchange");
@@ -151,8 +152,6 @@ public class OrderService {
     }
 
     public void saveOrder(OrderRequest orderRequest, String orderId, String exchange) {
-        // Generate a unique id to mark split orders
-        String osId = UUID.randomUUID().toString();
         saveOrder(new Order(orderId,
                         orderRequest.getProduct(),
                         orderRequest.getQuantity(),
@@ -162,7 +161,7 @@ public class OrderService {
                         new Date(),
                         exchange,
                         orderRequest.getUserId(),
-                        osId
+                        orderRequest.getOsId()
                 )
         );
     }
@@ -228,6 +227,7 @@ public class OrderService {
                     .retrieve()
                     .bodyToMono(Boolean.class)
                     .block();
+            assert response != null;
             cancelOrder(response, order);
 
         }

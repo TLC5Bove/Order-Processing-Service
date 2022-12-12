@@ -23,9 +23,6 @@ import java.time.Duration;
 @Configuration
 @EnableCaching
 public class ReceiverConfig {
-    @Autowired
-    Subscriber subscriber;
-
     @Value("${spring.data.redis.host}")
     private String redisHost;
     @Value("${spring.data.redis.port}")
@@ -62,7 +59,7 @@ public class ReceiverConfig {
 
     @Bean
     public MessageListenerAdapter messageListenerAdapter(){
-        return new MessageListenerAdapter(subscriber);
+        return new MessageListenerAdapter();
     }
 
     @Bean

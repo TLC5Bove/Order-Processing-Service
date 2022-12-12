@@ -20,8 +20,8 @@ public class OrderController {
 //    }
 
     @PostMapping
-    public String placeOrderOnExchange(@RequestBody OrderRequest order, String exchange) {
-        return orderService.placeOrder(order, exchange);
+    public void placeOrderOnExchange(@RequestBody OrderRequest order, String exchange) {
+        orderService.placeOrder(order);
     }
 
     @DeleteMapping("{orderId}")

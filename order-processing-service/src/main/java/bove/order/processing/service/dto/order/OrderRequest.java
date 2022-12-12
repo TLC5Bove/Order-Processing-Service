@@ -8,8 +8,9 @@ import java.util.Date;
 @Getter
 @Setter
 @AllArgsConstructor
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @ToString
+@NoArgsConstructor
 public class OrderRequest {
     @JsonProperty
     private String product;
@@ -17,8 +18,8 @@ public class OrderRequest {
     private Double price;
     private String side;
     private String type;
-    private int portfolioId;
-    private int userId;
+    private Long portfolioId;
+    private Long userId;
     private String osId;
     private Date orderDate;
 }
