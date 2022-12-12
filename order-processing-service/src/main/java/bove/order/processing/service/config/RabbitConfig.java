@@ -13,9 +13,13 @@ public class RabbitConfig {
     public static final String OBS_QUEUE = "obs_queue";
     public static final String TRACKING_QUEUE = "tracking_queue";
     public static final String COMPLETION_QUEUE = "completion_queue";
+    public static final String CLIENT_QUEUE = "client_queue";
+    public static final String ORDER_QUEUE = "order_queue";
     public static final String OBS_EXCHANGE = "obs_exchange";
     public static final String TRACKING_EXCHANGE = "tracking_exchange";
     public static final String COMPLETION_EXCHANGE = "completion_exchange";
+    public static final String CLIENT_EXCHANGE = "completion_exchange";
+    public static final String ORDER_EXCHANGE = "order_exchange";
     public static final String ROUTING_KEY = "message_routingKey";
 
     @Bean
@@ -34,6 +38,12 @@ public class RabbitConfig {
     }
 
     @Bean
+    public Queue client_queue() { return new Queue(CLIENT_QUEUE); }
+
+    @Bean
+    public Queue order_queue() { return new Queue(ORDER_QUEUE); }
+
+    @Bean
     public DirectExchange obs_exchange() {
         return new DirectExchange(OBS_EXCHANGE);
     }
@@ -46,6 +56,16 @@ public class RabbitConfig {
     @Bean
     public DirectExchange completion_exchange() {
         return new DirectExchange(COMPLETION_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange client_exchange() {
+        return new DirectExchange(CLIENT_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange order_exchange() {
+        return new DirectExchange(ORDER_EXCHANGE);
     }
 
     @Bean
@@ -69,6 +89,22 @@ public class RabbitConfig {
         return BindingBuilder
                 .bind(completion_queue())
                 .to(completion_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding client_binding() {
+        return BindingBuilder
+                .bind(client_queue())
+                .to(client_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding order_binding() {
+        return BindingBuilder
+                .bind(order_queue())
+                .to(order_exchange())
                 .with(ROUTING_KEY);
     }
 

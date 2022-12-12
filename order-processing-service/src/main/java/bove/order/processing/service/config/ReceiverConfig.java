@@ -1,6 +1,5 @@
 package bove.order.processing.service.config;
 
-import bove.order.processing.service.receiver.entity.Subscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
