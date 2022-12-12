@@ -18,7 +18,7 @@ public class RabbitConfig {
     public static final String OBS_EXCHANGE = "obs_exchange";
     public static final String TRACKING_EXCHANGE = "tracking_exchange";
     public static final String COMPLETION_EXCHANGE = "completion_exchange";
-    public static final String CLIENT_EXCHANGE = "completion_exchange";
+    public static final String CLIENT_EXCHANGE = "client_exchange";
     public static final String ORDER_EXCHANGE = "order_exchange";
     public static final String ROUTING_KEY = "message_routingKey";
 

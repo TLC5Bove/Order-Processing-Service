@@ -1,10 +1,7 @@
 package bove.order.processing.service.messaging;
 
 import bove.order.processing.service.config.RabbitConfig;
-import bove.order.processing.service.dto.order.Order;
-import bove.order.processing.service.dto.order.OrderDTO;
-import bove.order.processing.service.dto.order.OrderRequest;
-import bove.order.processing.service.dto.order.OrderStatusResponse;
+import bove.order.processing.service.dto.order.*;
 import bove.order.processing.service.service.OrderService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -31,12 +28,25 @@ public class Receiver {
             order.setStatus("partial");
         } else {
             order.setStatus("complete");
-            publisher.publishOrderCompletionMessage(order.getOsId());
+            CompleteOrder completeOrder = new CompleteOrder();
+            completeOrder.setOSID(order.getOsId());
+            completeOrder.setCummPrice(calcCummPrice(message));
+            publisher.publishOrderCompletionMessage(completeOrder);
         }
         order.setCumulatitivePrice(message.getCumulatitivePrice());
         order.setCumulatitiveQuantity(message.getCumulatitiveQuantity());
         order.setDateUpdated(new Date());
         orderService.saveOrder(order);
+        System.out.println("Order with id " + message.getOrderID() + " is partially or fully fulfilled");
+    }
+
+    private Double calcCummPrice(OrderStatusResponse order){
+        Double price = 0.0;
+        for (var execution : order.getExecutions()){
+            price += (execution.getPrice() * execution.getQuantity());
+        }
+
+        return price;
     }
 
     @RabbitListener(queues = RabbitConfig.ORDER_QUEUE)
@@ -52,5 +62,6 @@ public class Receiver {
         orderRequest.setPortfolioId(message.getPortId());
         orderRequest.setOsId(message.getOSID());
         orderService.placeOrder(orderRequest);
+        System.out.println("Received order from user " + message.getUserId() + " and order OSID " + message.getOSID() );
     }
 }
