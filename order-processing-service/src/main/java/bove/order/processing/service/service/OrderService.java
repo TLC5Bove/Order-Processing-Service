@@ -97,7 +97,7 @@ public class OrderService {
 
     }
 
-    public String placeOrder(OrderRequest orderRequest, String exchange) {
+    public String placeOrder(OrderRequest orderRequest) {
         String exchange1 = "exchange";
         String exchange2 = "exchange2";
 

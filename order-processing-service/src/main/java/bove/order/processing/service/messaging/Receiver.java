@@ -2,6 +2,7 @@ package bove.order.processing.service.messaging;
 
 import bove.order.processing.service.config.RabbitConfig;
 import bove.order.processing.service.dto.order.Order;
+import bove.order.processing.service.dto.order.OrderRequest;
 import bove.order.processing.service.dto.order.OrderStatusResponse;
 import bove.order.processing.service.service.OrderService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -27,7 +28,7 @@ public class Receiver {
     }
 
     @RabbitListener(queues = RabbitConfig.ORDER_QUEUE)
-    public void orderListener(Order order){
-
+    public void orderListener(OrderRequest message){
+        orderService.placeOrder(message);
     }
 }
