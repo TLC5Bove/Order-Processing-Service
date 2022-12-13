@@ -15,18 +15,6 @@ public class OrderValidatorService {
     @Autowired
     private ReceiverController receiverController;
 
-    // Validate that client has sufficient funds to place order
-    public boolean clientHasSufficientFunds(String clientId) {
-        // TODO
-        return false;
-    }
-
-    // validate that client owns the stock they are selling
-    public boolean clientIsOwnerOfStock(OrderRequest orderRequest) {
-        // TODO
-        return false;
-    }
-
     // limit checking - ensure the clients aren't more than a certain number of orders - limit orders
     public ValidatorResponse quantityIsWithinLimit(OrderRequest orderRequest) {
         String validator = "QuantityWithinLimit: ";
