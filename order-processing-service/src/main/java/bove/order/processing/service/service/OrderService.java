@@ -126,11 +126,11 @@ public class OrderService {
         // TODO 4: ELSE RETURN ERROR WITH ACTION.VALUE();
 
         if (action.equals(Action.BOTH)) {
-            splitOrder(orderRequest);
+            splitAndOrder(orderRequest, Action.SPLIT);
         } else if (action.equals(Action.EXCHANGE1)) {
-            return decideExchangeToPlaceOrder(orderRequest, exchange1);
+            return splitAndOrder(orderRequest, Action.EXCHANGE1);
         } else if (action.equals(Action.EXCHANGE2)) {
-            return decideExchangeToPlaceOrder(orderRequest, exchange2);
+            return splitAndOrder(orderRequest, Action.EXCHANGE2);
         }
         return action.value();
     }
