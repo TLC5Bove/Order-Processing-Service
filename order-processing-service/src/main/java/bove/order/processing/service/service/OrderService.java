@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -47,6 +44,10 @@ public class OrderService {
 
     public void saveOrder(Order order) {
         orderRepo.save(order);
+    }
+
+    public List<Order> findAllByOsId(String osid){
+        return orderRepo.findAllByOsId(osid);
     }
 
     // validate the request
@@ -164,52 +165,6 @@ public class OrderService {
                         orderRequest.getOsId()
                 )
         );
-    }
-
-    public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
-        WebClient webClient = WebClient.create("https://exchange2.matraining.com");
-
-        OrderStatusResponse response = webClient.get()
-                .uri("/" + exchangeAPIkey + "/order/" + orderId)
-                .retrieve()
-                .bodyToMono(OrderStatusResponse.class)
-                .block();
-
-        assert response != null;
-        checkOrderExecutionStatus(response, orderId);
-        return response;
-    }
-
-    private void checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Starting");
-        Order order = findById(orderId);
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed find order");
-
-        if (order == null) return;
-
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed first check");
-
-        if (response.getExecutions() == order.getExecutions()) return;
-
-        if (Objects.equals(order.getStatus(), "complete")) return;
-
-        if (response.getExecutions() == null) return;
-
-        if (response.getQuantity() >= 1 && response.getQuantity() > response.getCumulatitiveQuantity()) {
-            order.setStatus("partial");
-        } else {
-            order.setStatus("complete");
-        }
-
-        for (Execution execution : response.getExecutions()) {
-            if (order.getExecutions().contains(execution)) continue;
-            execution.setOrder(order);
-            executionService.save(execution);
-        }
-        order.setCumulatitivePrice(response.getCumulatitivePrice());
-        order.setCumulatitiveQuantity(response.getCumulatitiveQuantity());
-        order.setDateUpdated(new Date());
-        orderRepo.save(order);
     }
 
     public void placeCancelOrder(String orderId, String exchange) {
