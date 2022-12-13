@@ -69,7 +69,6 @@ public class OrderService {
 
     // validate the request
     public Action validator(OrderRequest orderRequest) {
-        String stringResults = "";
 
         ValidatorResponse quantityLimit = orderValidatorService.quantityIsWithinLimit(orderRequest);
         ValidatorResponse priceRange = orderValidatorService.orderPriceIsWithinRange(orderRequest);
@@ -125,7 +124,7 @@ public class OrderService {
         // TODO 3. ACTION == EXCHANGE2 CALL SPLIT FOR EXCHANGE2
         // TODO 4: ELSE RETURN ERROR WITH ACTION.VALUE();
 
-        if (action.equals(Action.BOTH)) {
+        if (action.equals(Action.SPLIT)) {
             splitAndOrder(orderRequest, Action.SPLIT);
         } else if (action.equals(Action.EXCHANGE1)) {
             return splitAndOrder(orderRequest, Action.EXCHANGE1);
@@ -135,14 +134,7 @@ public class OrderService {
         return action.value();
     }
 
-    public String splitAndOrder(OrderRequest orderRequest, Action action){
-        String side = orderRequest.getSide();
-        String product = orderRequest.getProduct();
-        Integer quantity = orderRequest.getQuantity();
-        String type = orderRequest.getType();
-        Long portId = orderRequest.getPortfolioId();
-        Long userId = orderRequest.getUserId();
-        String osid = orderRequest.getOsId();
+    public List<Stock> getOpenOrders(String product, String side, int size){
 
         List<Stock> openOrders = new ArrayList<>();
         List<Ibm> ibmOrders;
@@ -155,56 +147,56 @@ public class OrderService {
         List<Tsla> tslaOrders;
 
         if (Objects.equals(product, "IBM")) {
-            ibmOrders = ibmService.findAllPageAndSortBySide(side, 20);
+            ibmOrders = ibmService.findAllPageAndSortBySide(side, size);
         }
         else {
             ibmOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "AAPL")) {
-            aaplOrders = aaplService.findAllPageAndSortBySide(side, 20);
+            aaplOrders = aaplService.findAllPageAndSortBySide(side, size);
         }
         else {
             aaplOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "AMZN")) {
-            amznOrders = amznService.findAllPageAndSortBySide(side, 20);
+            amznOrders = amznService.findAllPageAndSortBySide(side, size);
         }
         else {
             amznOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "MSFT")) {
-            msftOrders = msftService.findAllPageAndSortBySide(side, 20);
+            msftOrders = msftService.findAllPageAndSortBySide(side, size);
         }
         else {
             msftOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "NFLX")) {
-            nflxOrders = nflxService.findAllPageAndSortBySide(side, 20);
+            nflxOrders = nflxService.findAllPageAndSortBySide(side, size);
         }
         else {
             nflxOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "GOOGL")) {
-            googlOrders = googlService.findAllPageAndSortBySide(side, 20);
+            googlOrders = googlService.findAllPageAndSortBySide(side, size);
         }
         else {
             googlOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "ORCL")) {
-            orclOrders = orclService.findAllPageAndSortBySide(side, 20);
+            orclOrders = orclService.findAllPageAndSortBySide(side, size);
         }
         else {
             orclOrders = new ArrayList<>();
         }
 
         if (Objects.equals(product, "TSLA")) {
-            tslaOrders = tslaService.findAllPageAndSortBySide(side, 20);
+            tslaOrders = tslaService.findAllPageAndSortBySide(side, size);
         }else {
             tslaOrders = new ArrayList<>();
         }
@@ -217,6 +209,21 @@ public class OrderService {
         openOrders.addAll(msftOrders);
         openOrders.addAll(orclOrders);
         openOrders.addAll(tslaOrders);
+
+        return openOrders;
+    }
+
+    public String splitAndOrder(OrderRequest orderRequest, Action action){
+        String side = orderRequest.getSide();
+        String product = orderRequest.getProduct();
+        Integer quantity = orderRequest.getQuantity();
+        String type = orderRequest.getType();
+        Long portId = orderRequest.getPortfolioId();
+        Long userId = orderRequest.getUserId();
+        String osid = orderRequest.getOsId();
+
+        List<Stock> openOrders = getOpenOrders(product, side, 200);
+
 
 
         if (action == Action.EXCHANGE1){
@@ -239,29 +246,56 @@ public class OrderService {
     }
 
     public void splitOrders(List<Stock> openOrders, Integer quantity, OrderRequest orderRequest){
+        System.out.println("In actual Split");
+        Double price = orderRequest.getPrice();
+        if (openOrders.size() == 0){
+            openOrders = getOpenOrders(orderRequest.getProduct(), orderRequest.getSide(), 500);
+        }
         while (quantity > 0){
-            Stock order = openOrders.remove(0);
-            int orQuantity = order.getQuantity();
+            Stock order;
+            if (openOrders.size() == 0){
+                order = null;
+                orderRequest.setQuantity(quantity);
+                decideExchangeToPlaceOrder(orderRequest, "exchange");
+                break;
+            }
+            order = openOrders.remove(0);
+            int orQuantity = order.getQuantity() - order.getCumulatitiveQuantity();
             System.out.println(order);
 
-            OrderRequest or = new OrderRequest(
-                    order.getProduct(),
-                    (quantity < orQuantity) ? quantity : orQuantity,
-                    order.getPrice(),
-                    orderRequest.getSide(),
-                    order.getOrderType(),
-                    orderRequest.getPortfolioId(),
-                    orderRequest.getUserId(),
-                    orderRequest.getOsId(),
-                    new Date()
-            );
+            OrderRequest or;
+            if (Objects.equals(orderRequest.getSide(), "BUY")) {
+                or = new OrderRequest(
+                        order.getProduct(),
+                        (quantity < orQuantity) ? quantity : orQuantity,
+                        (price < order.getPrice()) ? price : order.getPrice(),
+                        orderRequest.getSide(),
+                        order.getOrderType(),
+                        orderRequest.getPortfolioId(),
+                        orderRequest.getUserId(),
+                        orderRequest.getOsId(),
+                        new Date()
+                );
+            }else{
+                or = new OrderRequest(
+                        order.getProduct(),
+                        (quantity < orQuantity) ? quantity : orQuantity,
+                        (price > order.getPrice()) ? price : order.getPrice(),
+                        orderRequest.getSide(),
+                        order.getOrderType(),
+                        orderRequest.getPortfolioId(),
+                        orderRequest.getUserId(),
+                        orderRequest.getOsId(),
+                        new Date()
+                );
+            }
             decideExchangeToPlaceOrder(or, order.getExchange());
             quantity = quantity - orQuantity;
         }
     }
 
     public String decideExchangeToPlaceOrder(OrderRequest orderRequest, String exchange) {
-
+        System.out.println("Buying stocks now");
         WebClient webClient = WebClient.create("https://" + exchange + ".matraining.com");
         try {
             String response = webClient.post()
@@ -271,8 +305,10 @@ public class OrderService {
                     .bodyToMono(String.class)
                     .block();
             assert response != null;
-
+            System.out.println("Done buying stocks");
             String orderId = response.substring(1, response.length() - 1);
+
+            System.out.println(orderId);
 
             IdAndExchange message = new IdAndExchange();
             message.setId(orderId);
@@ -281,7 +317,7 @@ public class OrderService {
             mqMessagePublisher.publishMessageToOBS(message);
             mqMessagePublisher.publishMessageToLORS(message);
 
-            saveOrder(orderRequest, orderId, "exchange");
+            saveOrder(orderRequest, orderId, exchange);
 
             return orderId;
         } catch (Exception e) {
@@ -304,76 +340,23 @@ public class OrderService {
         );
     }
 
-    public OrderStatusResponse getOrderStatus(String orderId, String exchange) {
-        WebClient webClient = WebClient.create("https://exchange2.matraining.com");
-
-        OrderStatusResponse response = webClient.get()
-                .uri("/" + exchangeAPIkey + "/order/" + orderId)
-                .retrieve()
-                .bodyToMono(OrderStatusResponse.class)
-                .block();
-
-        assert response != null;
-        checkOrderExecutionStatus(response, orderId);
-        return response;
-    }
-
-    private void checkOrderExecutionStatus(OrderStatusResponse response, String orderId) {
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Starting");
-        Order order = findById(orderId);
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed find order");
-
-        if (order == null) return;
-
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>> passed first check");
-
-        if (response.getExecutions() == order.getExecutions()) return;
-
-        if (Objects.equals(order.getStatus(), "complete")) return;
-
-        if (response.getExecutions() == null) return;
-
-        if (response.getQuantity() >= 1 && response.getQuantity() > response.getCumulatitiveQuantity()) {
-            order.setStatus("partial");
-        } else {
-            order.setStatus("complete");
-        }
-
-        for (Execution execution : response.getExecutions()) {
-            if (order.getExecutions().contains(execution)) continue;
-            execution.setOrder(order);
-            executionService.save(execution);
-        }
-        order.setCumulatitivePrice(response.getCumulatitivePrice());
-        order.setCumulatitiveQuantity(response.getCumulatitiveQuantity());
-        order.setDateUpdated(new Date());
-        orderRepo.save(order);
-    }
-
-    public void placeCancelOrder(String orderId, String exchange) {
-        Optional<Order> ord = orderRepo.findById(orderId);
-
-        if (ord.isEmpty())
-            return;
-
-        Order order = ord.get();
-        if (order.getStatus() == "pending" || order.getStatus() == "partial") {
-            WebClient webClient = WebClient.create("https://" + exchange + ".matraining.com");
+    public void placeCancelOrder(Order order) {
+        if (Objects.equals(order.getStatus(), "pending") || Objects.equals(order.getStatus(), "partial")) {
+            WebClient webClient = WebClient.create("https://" + order.getExchange() + ".matraining.com");
 
             Boolean response = webClient.delete()
-                    .uri("/" + exchangeAPIkey + "/order/" + orderId)
+                    .uri("/" + exchangeAPIkey + "/order/" + order.getOrderID())
                     .retrieve()
                     .bodyToMono(Boolean.class)
                     .block();
             assert response != null;
             cancelOrder(response, order);
-
         }
-
     }
 
     private void cancelOrder(Boolean response, Order order) {
         if (response) order.setStatus("cancelled");
+        orderRepo.save(order);
     }
 
 }

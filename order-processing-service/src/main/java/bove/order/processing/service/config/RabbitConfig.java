@@ -15,11 +15,19 @@ public class RabbitConfig {
     public static final String COMPLETION_QUEUE = "completion_queue";
     public static final String CLIENT_QUEUE = "client_queue";
     public static final String ORDER_QUEUE = "order_queue";
+    public static final String CANCEL_FROM_CLIENT_QUEUE = "canc_from_client_queue";
+    public static final String CANCEL_FROM_OPS_QUEUE = "canc_from_ops_queue";
+    public static final String CANC_FROM_LOGGING_QUEUE = "canc_from_logging_queue";
+    public static final String CANC_COMP_FROM_OPS_QUEUE = "canc_complete_from_ops_queue";
     public static final String OBS_EXCHANGE = "obs_exchange";
     public static final String TRACKING_EXCHANGE = "tracking_exchange";
     public static final String COMPLETION_EXCHANGE = "completion_exchange";
     public static final String CLIENT_EXCHANGE = "client_exchange";
     public static final String ORDER_EXCHANGE = "order_exchange";
+    public static final String CANCEL_FROM_CLIENT_EXCHANGE = "canc_from_client_exchange";
+    public static final String CANCEL_FROM_OPS_EXCHANGE = "canc_from_ops_exchange";
+    public static final String CANC_FROM_LOGGING_EXCHANGE = "canc_from_logging_exchange";
+    public static final String CANC_COMP_FROM_OPS_EXCHANGE = "canc_complete_from_ops_exchange";
     public static final String ROUTING_KEY = "message_routingKey";
 
     @Bean
@@ -44,6 +52,18 @@ public class RabbitConfig {
     public Queue order_queue() { return new Queue(ORDER_QUEUE); }
 
     @Bean
+    public Queue cancel_from_client_queue() { return new Queue(CANCEL_FROM_CLIENT_QUEUE); }
+
+    @Bean
+    public Queue cancel_from_ops_queue() { return new Queue(CANCEL_FROM_OPS_QUEUE); }
+
+    @Bean
+    public Queue canc_from_logging_queue() { return new Queue(CANC_FROM_LOGGING_QUEUE); }
+
+    @Bean
+    public Queue canc_comp_from_ops_queue() { return new Queue(CANC_COMP_FROM_OPS_QUEUE); }
+
+    @Bean
     public DirectExchange obs_exchange() {
         return new DirectExchange(OBS_EXCHANGE);
     }
@@ -66,6 +86,26 @@ public class RabbitConfig {
     @Bean
     public DirectExchange order_exchange() {
         return new DirectExchange(ORDER_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange canc_from_client_exchange() {
+        return new DirectExchange(CANCEL_FROM_CLIENT_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange canc_from_logging_exchange() {
+        return new DirectExchange(CANC_FROM_LOGGING_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange canc_from_ops_exchange() {
+        return new DirectExchange(CANCEL_FROM_OPS_EXCHANGE);
+    }
+
+    @Bean
+    public DirectExchange canc_comp_from_ops_exchange() {
+        return new DirectExchange(CANCEL_FROM_OPS_EXCHANGE);
     }
 
     @Bean
@@ -105,6 +145,38 @@ public class RabbitConfig {
         return BindingBuilder
                 .bind(order_queue())
                 .to(order_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding canc_from_client_binding() {
+        return BindingBuilder
+                .bind(cancel_from_client_queue())
+                .to(canc_from_client_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding canc_from_ops_binding() {
+        return BindingBuilder
+                .bind(cancel_from_ops_queue())
+                .to(canc_from_ops_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding canc_from_logging_binding() {
+        return BindingBuilder
+                .bind(canc_from_logging_queue())
+                .to(canc_from_logging_exchange())
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding canc_comp_from_ops_binding() {
+        return BindingBuilder
+                .bind(canc_comp_from_ops_queue())
+                .to(canc_comp_from_ops_exchange())
                 .with(ROUTING_KEY);
     }
 

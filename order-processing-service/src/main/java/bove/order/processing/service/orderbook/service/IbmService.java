@@ -21,18 +21,18 @@ public class IbmService {
 
     public List<Ibm> findAllPageAndSortBySide (String side, int size) {
         Pageable p;
+
         if (Objects.equals(side, "BUY")){
             p = PageRequest.of(0, size, Sort.by("price").ascending());
+            Page<Ibm> page = ibmPageSortRepo.findAllBySideAndOrderType("SELL", "LIMIT", p);
 
-        }else{
+            if(page.hasContent()) return page.getContent();
+        } else {
             p = PageRequest.of(0, size, Sort.by("price").descending());
-        }
-        Page<Ibm> page = ibmPageSortRepo.findAllBySideAndOrderType(side, "LIMIT", p);
+            Page<Ibm> page = ibmPageSortRepo.findAllBySideAndOrderType("BUY", "LIMIT", p);
 
-        if(page.hasContent()) {
-            return page.getContent();
+            if(page.hasContent()) return page.getContent();
         }
-        else
-            return new ArrayList<Ibm>();
+        return new ArrayList<Ibm>();
     }
 }
