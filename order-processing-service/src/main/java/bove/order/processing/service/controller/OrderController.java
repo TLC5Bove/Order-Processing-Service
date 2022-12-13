@@ -29,9 +29,4 @@ public class OrderController {
         orderService.placeCancelOrder(orderId, exchange);
     }
 
-    @GetMapping("{orderId}")
-    public OrderStatusResponse getOrderStatus(@PathVariable String orderId, String exchange) {
-        return orderService.getOrderStatus(orderId, exchange);
-    }
-
 }
