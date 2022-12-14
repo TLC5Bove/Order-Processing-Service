@@ -252,9 +252,11 @@ public class OrderService {
             openOrders = getOpenOrders(orderRequest.getProduct(), orderRequest.getSide(), 500);
         }
         while (quantity > 0){
+            System.out.println("entered while loop");
             Stock order;
             if (openOrders.size() == 0){
                 order = null;
+                System.out.println("placing my own order");
                 orderRequest.setQuantity(quantity);
                 decideExchangeToPlaceOrder(orderRequest, "exchange");
                 break;
@@ -266,7 +268,7 @@ public class OrderService {
             OrderRequest or;
             if (Objects.equals(orderRequest.getSide(), "BUY")) {
                 or = new OrderRequest(
-                        order.getProduct(),
+                        orderRequest.getProduct(),
                         (quantity < orQuantity) ? quantity : orQuantity,
                         (price < order.getPrice()) ? price : order.getPrice(),
                         orderRequest.getSide(),
@@ -278,7 +280,7 @@ public class OrderService {
                 );
             }else{
                 or = new OrderRequest(
-                        order.getProduct(),
+                        orderRequest.getProduct(),
                         (quantity < orQuantity) ? quantity : orQuantity,
                         (price > order.getPrice()) ? price : order.getPrice(),
                         orderRequest.getSide(),
@@ -304,8 +306,8 @@ public class OrderService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            assert response != null;
             System.out.println("Done buying stocks");
+            assert response != null;
             String orderId = response.substring(1, response.length() - 1);
 
             System.out.println(orderId);

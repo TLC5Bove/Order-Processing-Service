@@ -46,6 +46,7 @@ public class Order {
                  String exchange,
                  Long userId, String osId) {
         this.orderID = id;
+        this.product = product;
         this.quantity = quantity;
         this.price = price;
         this.side = side;
@@ -55,6 +56,10 @@ public class Order {
         this.userId = userId;
         this.status = "pending";
         this.osId = osId;
+    }
+
+    public void add(Execution execution){
+        executions.add(execution);
     }
 
     @Override

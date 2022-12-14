@@ -42,11 +42,24 @@ public class Receiver {
                 publisher.publishOrderCompletionMessage(completeOrder);
             }
         }
+        for (var execution : message.getExecutions()){
+            if (!order.getExecutions().contains(execution)){
+                execution.setOrder(order);
+                order.add(execution);
+            }
+        }
         order.setCumulatitivePrice(message.getCumulatitivePrice());
         order.setCumulatitiveQuantity(message.getCumulatitiveQuantity());
         order.setDateUpdated(new Date());
+        order.setCumulatitivePrice(caclCummPriceForOneOrder(order));
         orderService.saveOrder(order);
         System.out.println("Order with id " + message.getOrderID() + " is partially or fully fulfilled");
+    }
+
+    private Double caclCummPriceForOneOrder(Order order){
+        Double price = 0.0;
+        for (var exec : order.getExecutions()) price = (exec.getPrice() * exec.getQuantity());
+        return price;
     }
 
     private Boolean isFullyCompleted(List<Order> orders){

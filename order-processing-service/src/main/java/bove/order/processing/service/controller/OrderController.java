@@ -33,10 +33,10 @@ public class OrderController {
         orderService.placeOrder(order);
     }
 
-    @DeleteMapping("{orderId}")
-    public void cancelOrderOnExchange(@PathVariable String orderId, String exchange) {
-        orderService.placeCancelOrder(orderId, exchange);
-    }
+//    @DeleteMapping("{orderId}")
+//    public void cancelOrderOnExchange(@PathVariable String orderId, String exchange) {
+//        orderService.placeCancelOrder(orderId, exchange);
+//    }
 
     @GetMapping
     public List<Ibm> getFromPage(){
