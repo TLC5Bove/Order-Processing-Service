@@ -13,7 +13,7 @@ import java.util.Objects;
 @Entity
 public class Execution {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int id;
     private Date timestamp;
     private double price;
@@ -32,19 +32,18 @@ public class Execution {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Execution execution = (Execution) o;
-        return id == execution.id && Double.compare(execution.price, price) == 0 && quantity == execution.quantity && timestamp.equals(execution.timestamp);
+        return Double.compare(execution.price, price) == 0 && quantity == execution.quantity && timestamp.equals(execution.timestamp);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, timestamp, price, quantity);
+        return Objects.hash(timestamp, price, quantity);
     }
 
     @Override
     public String toString() {
         return "Execution{" +
-                "id=" + id +
-                ", timestamp=" + timestamp +
+                "timestamp=" + timestamp +
                 ", price=" + price +
                 ", quantity=" + quantity +
                 '}';

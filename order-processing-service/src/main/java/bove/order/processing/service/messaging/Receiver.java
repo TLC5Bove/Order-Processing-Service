@@ -1,10 +1,10 @@
 package bove.order.processing.service.messaging;
 
 import bove.order.processing.service.config.RabbitConfig;
+import bove.order.processing.service.dto.message.OsidQuantityPrice;
 import bove.order.processing.service.dto.order.*;
 import bove.order.processing.service.repository.ExecutionRepo;
 import bove.order.processing.service.service.OrderService;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Component
 public class Receiver {
@@ -36,21 +35,34 @@ public class Receiver {
             List<Order> relativeOrders = orderService.findAllByOsId(order.getOrderID());
             List<Order> filteredOrders = relativeOrders.stream().filter(o -> Objects.equals(o.getOrderID(), order.getOrderID())).toList();
             order.setStatus("complete");
-            if (isFullyCompleted(filteredOrders, order.getOrderID())){
+            if (isFullyCompleted(filteredOrders)){
                 CompleteOrder completeOrder = new CompleteOrder();
                 completeOrder.setOSID(order.getOsId());
                 completeOrder.setCummPrice(calcCummPrice(message, filteredOrders));
                 publisher.publishOrderCompletionMessage(completeOrder);
             }
         }
+        for (var execution : message.getExecutions()){
+            if (!order.getExecutions().contains(execution)){
+                execution.setOrder(order);
+                order.add(execution);
+            }
+        }
         order.setCumulatitivePrice(message.getCumulatitivePrice());
         order.setCumulatitiveQuantity(message.getCumulatitiveQuantity());
         order.setDateUpdated(new Date());
+        order.setCumulatitivePrice(caclCummPriceForOneOrder(order));
         orderService.saveOrder(order);
         System.out.println("Order with id " + message.getOrderID() + " is partially or fully fulfilled");
     }
 
-    private Boolean isFullyCompleted(List<Order> orders, String curID){
+    private Double caclCummPriceForOneOrder(Order order){
+        Double price = 0.0;
+        for (var exec : order.getExecutions()) price = (exec.getPrice() * exec.getQuantity());
+        return price;
+    }
+
+    private Boolean isFullyCompleted(List<Order> orders){
         for (var order : orders){
             if (!Objects.equals(order.getStatus(), "complete")){
                 return false;
@@ -83,5 +95,37 @@ public class Receiver {
         orderRequest.setOsId(message.getOSID());
         orderService.placeOrder(orderRequest);
         System.out.println("Received order from user " + message.getUserId() + " and order OSID " + message.getOSID() );
+    }
+
+    @RabbitListener(queues = RabbitConfig.CANCEL_FROM_CLIENT_QUEUE)
+    public void cancelListener(String osid){
+        List<Order> allOrders = orderService.findAllByOsId(osid);
+        if (isFullyCompleted(allOrders)) return;
+
+        allOrders.forEach(o -> {
+            if (!Objects.equals(o.getStatus(), "complete")) orderService.placeCancelOrder(o);
+            publisher.publishCancelOrderToLogging(o.getOrderID());
+        });
+        List<Order> cancelledOrders = orderService.findAllByOsId(osid);
+        OsidQuantityPrice cancelled = new OsidQuantityPrice();
+        cancelled.setOsId(osid);
+        cancelled.setQuantity(cancelledOrdersQuantity(cancelledOrders));
+        cancelled.setPrice(cancelledOrdersPrice(cancelledOrders));
+
+         publisher.publishCancelledOrderToClient(cancelled);
+    }
+
+    private Integer cancelledOrdersQuantity(List<Order> orders){
+        Integer quantity = 0;
+        for (var order: orders) quantity += order.getCumulatitiveQuantity();
+        return quantity;
+    }
+
+    private Double cancelledOrdersPrice(List<Order> orders){
+        Double price = 0.0;
+        for (var order : orders){
+            for (var exec : order.getExecutions()) price += (exec.getPrice() * exec.getQuantity());
+        }
+        return price;
     }
 }

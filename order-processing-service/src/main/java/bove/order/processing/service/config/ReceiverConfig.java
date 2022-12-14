@@ -62,6 +62,8 @@ public class ReceiverConfig {
         return new MessageListenerAdapter();
     }
 
+
+
     @Bean
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory,
                                                  MessageListenerAdapter listenerAdapter){
